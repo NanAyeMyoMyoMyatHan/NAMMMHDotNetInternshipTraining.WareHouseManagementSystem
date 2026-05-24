@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../NAMMMHDotNetInternshipTraining.Database/NAMMMHDotNetInternshipTraining.Database.csproj" />
+  <Project Path="NAMMMHDotNetInternshipTraining.WareHouseManagementSystem.csproj" />
+</Solution>

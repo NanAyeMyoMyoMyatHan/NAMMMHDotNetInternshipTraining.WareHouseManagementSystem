@@ -1,0 +1,6 @@
+@NAMMMHDotNetInternshipTraining.WareHouseManagementSystem_HostAddress = http://localhost:5115
+
+GET {{NAMMMHDotNetInternshipTraining.WareHouseManagementSystem_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
