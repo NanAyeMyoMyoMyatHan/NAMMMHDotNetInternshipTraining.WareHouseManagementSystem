@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using NAMMMHDotNetInternshipTraining.Database.AppDbModels;
 using NAMMMHDotNetInternshipTraining.WareHouseManagementSystem.Models;
 
@@ -14,21 +15,55 @@ namespace NAMMMHDotNetInternshipTraining.WareHouseManagementSystem.Controllers
         [HttpGet]
         public IActionResult GetProduct()
         {
-            var lst = db.TblProducts.ToList();
+            // Database ထဲမှာရှိသမျှ Product အားလုံးကို ပတ်ပြီး တစ်ခါတည်း အရေအတွက်တွေ တွက်ထုတ်ပေးသွားမှာပါ
+            var lst = db.TblProducts
+                        .Select(p => new
+                        {
+                            ProductId = p.ProductId,
+                            ProductCode = p.ProductCode,
+                            ProductName = p.ProductName,
+                            Price = p.Price,
+                            CurrentStock = p.Quantity, // လက်ရှိ ဆိုင်ထဲက လက်ကျန်
+
+                            // 🔥 ၁။ ဒီ Product ကို စုစုပေါင်း ဝယ်ခဲ့သမျှ အရေအတွက်ပေါင်း
+                            TotalQuantityPurchased = p.TblPurchaseItems.Sum(pi => (int?)pi.Quantity) ?? 0,
+
+                            // 🔥 ၂။ ဒီ Product ကို စုစုပေါင်း ရောင်းခဲ့ရသမျှ အရေအတွက်ပေါင်း
+                            TotalQuantitySold = p.TblSaleItems.Sum(si => (int?)si.Quantity) ?? 0
+                        })
+                        .ToList();
+
             return Ok(lst);
         }
-
         [HttpGet("{id}")]
-        public IActionResult GetProductById(int id)
+        public IActionResult GetProductReport(int id)
         {
-            var item = db.TblProducts.FirstOrDefault(x => x.ProductId == id);
-            if (item == null)
-            {
-                return NotFound("There is no Data");
-            }
-            return Ok(item);
-        }
+            // Database ကနေ ပစ္စည်းကို ရှာဖွေပြီး မင်းလိုချင်တဲ့ ပုံစံအတိုင်း ကွက်တိ ဖွဲ့စည်းလိုက်ပါတယ်
+            var productReport = db.TblProducts
+                .Where(p => p.ProductId == id)
+                .Select(p => new
+                {
+                    ProductId = p.ProductId,
+                    ProductCode = p.ProductCode,
+                    ProductName = p.ProductName,
+                    Price = p.Price,
+                    CurrentStock = p.Quantity, // လက်ရှိ Inventory ထဲမှာ ရှိနေတဲ့ လက်ကျန်
 
+                    // 🔥 ၁။ အဝယ်စာရင်း Detail ထဲက Quantity များကို အကုန်ပေါင်းပြီး Total ဝယ်ယူမှုကို တွက်ချက်ခြင်း
+                    TotalQuantityPurchased = p.TblPurchaseItems.Sum(pi => (int?)pi.Quantity) ?? 0,
+
+                    // 🔥 ၂။ အရောင်းစာရင်း Detail ထဲက Quantity များကို အကုန်ပေါင်းပြီး Total ရောင်းရမှုကို တွက်ချက်ခြင်း
+                    TotalQuantitySold = p.TblSaleItems.Sum(si => (int?)si.Quantity) ?? 0
+                })
+                .FirstOrDefault();
+
+            if (productReport == null)
+            {
+                return NotFound("Product not found");
+            }
+
+            return Ok(productReport);
+        }
         [HttpPost]
         public IActionResult CreateProduct(ProductCreateRequestModel requestModel)
         {
