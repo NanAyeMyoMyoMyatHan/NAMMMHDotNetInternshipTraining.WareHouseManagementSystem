@@ -81,7 +81,7 @@ namespace NAMMMHDotNetInternshipTraining.WareHouseManagementSystem.Controllers
             var sale = new TblSale
             {
                 InvoiceNo = requestModel.InvoiceNo,
-                
+                CustomerId = requestModel.CustomerId,
                 Remarks = requestModel.Remarks,
                 SaleDate = DateTime.Now,
                 CreatedBy = requestModel.CreatedBy,

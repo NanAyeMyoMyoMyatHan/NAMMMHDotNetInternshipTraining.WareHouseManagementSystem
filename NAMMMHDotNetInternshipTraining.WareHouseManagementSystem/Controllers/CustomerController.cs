@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using NAMMMHDotNetInternshipTraining.Database.AppDbModels;
 using NAMMMHDotNetInternshipTraining.WareHouseManagementSystem.Models;
 
@@ -14,19 +15,67 @@ namespace NAMMMHDotNetInternshipTraining.WareHouseManagementSystem.Controllers
         [HttpGet]
         public IActionResult GetCustomer()
         {
-            var lst = db.TblCustomers.ToList();
+            var lst = db.TblCustomers.Include(x=>x.TblSales)
+                .Where(c => !c.IsDelete)
+                .Select(x => new
+                {
+                    CustomerId = x.CustomerId,
+                    CustomerName = x.CustomerName,
+                    Phone = x.Phone,
+                    Address = x.Address,
+                    IsDelete = x.IsDelete,
+                    CreatedDateTime = x.CreatedDateTime,
+
+                    PurchasedProducts = x.TblSales
+                .SelectMany(s => s.TblSaleItems)
+                .Select(si => new
+                {
+                   ProductName = si.Product.ProductName,
+                   PurchaseDate = si.Sale.SaleDate
+                })
+                .ToList()
+
+                })
+                
+                .ToList();
             return Ok(lst);
         }
 
         [HttpGet("{id}")]
         public IActionResult GetCustomerById(int id)
         {
-            var item = db.TblCustomers.FirstOrDefault(x => x.CustomerId == id);
-            if (item == null)
+            var customerData = db.TblCustomers
+         .Where(c => c.CustomerId == id && !c.IsDelete)
+         .Select(c => new
+         {
+             CustomerId = c.CustomerId,
+             CustomerName = c.CustomerName,
+             Phone = c.Phone,
+             Address = c.Address,
+             CreatedDateTime = c.CreatedDateTime,
+
+             // 🔥 [အဓိကနေရာ] Customer ရဲ့ အရောင်းဘေလ်တွေထဲကနေ ပစ္စည်းစာရင်းတွေကို ဆွဲထုတ်ပြီး flat ဖြစ်အောင်လုပ်ခြင်း
+             PurchasedProducts = c.TblSales
+                 .SelectMany(s => s.TblSaleItems) // ဘေလ်အားလုံးထဲက Item တွေကို စုစည်းလိုက်တာပါ
+                 .Select(si => new
+                 {
+                     ProductId = si.ProductId,
+                     ProductName = si.Product.ProductName, // Product နာမည်ကို လှမ်းယူခြင်း
+                     Quantity = si.Quantity,
+                     UnitPrice = si.UnitPrice,
+                     TotalPrice = si.Quantity * si.UnitPrice, // ကျသင့်ငွေတွက်ချက်ခြင်း
+                     SaleDate = si.Sale.SaleDate // ဘယ်နေ့က ဝယ်သွားလဲဆိုတဲ့ ရက်စွဲ
+                 })
+                 .ToList()
+         })
+         .FirstOrDefault();
+
+            if (customerData == null)
             {
-                return NotFound("There is no Data");
+                return NotFound("Customer not found သို့မဟုတ် ဖျက်ပစ်ထားပြီးသားဖြစ်နေပါသည်။");
             }
-            return Ok(item);
+
+            return Ok(customerData);
         }
 
         [HttpPost]

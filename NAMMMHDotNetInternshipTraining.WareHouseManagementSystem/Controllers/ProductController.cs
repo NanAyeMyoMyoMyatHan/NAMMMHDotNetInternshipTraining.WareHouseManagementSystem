@@ -17,6 +17,7 @@ namespace NAMMMHDotNetInternshipTraining.WareHouseManagementSystem.Controllers
         {
             // Database ထဲမှာရှိသမျှ Product အားလုံးကို ပတ်ပြီး တစ်ခါတည်း အရေအတွက်တွေ တွက်ထုတ်ပေးသွားမှာပါ
             var lst = db.TblProducts
+                .Include(x=>x.Category)
                         .Select(p => new
                         {
                             ProductId = p.ProductId,
@@ -25,6 +26,7 @@ namespace NAMMMHDotNetInternshipTraining.WareHouseManagementSystem.Controllers
                             Price = p.Price,
                             CurrentStock = p.Quantity, // လက်ရှိ ဆိုင်ထဲက လက်ကျန်
 
+                            CategoryName = p.Category.CategoryName,
                             // 🔥 ၁။ ဒီ Product ကို စုစုပေါင်း ဝယ်ခဲ့သမျှ အရေအတွက်ပေါင်း
                             TotalQuantityPurchased = p.TblPurchaseItems.Sum(pi => (int?)pi.Quantity) ?? 0,
 
