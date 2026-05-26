@@ -42,6 +42,7 @@ namespace NAMMMHDotNetInternshipTraining.WareHouseManagementSystem.Controllers
         {
             // Database ကနေ ပစ္စည်းကို ရှာဖွေပြီး မင်းလိုချင်တဲ့ ပုံစံအတိုင်း ကွက်တိ ဖွဲ့စည်းလိုက်ပါတယ်
             var productReport = db.TblProducts
+                .Include (x=> x.Category)
                 .Where(p => p.ProductId == id)
                 .Select(p => new
                 {
@@ -49,7 +50,8 @@ namespace NAMMMHDotNetInternshipTraining.WareHouseManagementSystem.Controllers
                     ProductCode = p.ProductCode,
                     ProductName = p.ProductName,
                     Price = p.Price,
-                    CurrentStock = p.Quantity, // လက်ရှိ Inventory ထဲမှာ ရှိနေတဲ့ လက်ကျန်
+                    CurrentStock = p.Quantity,
+                    CategoryName = p.Category.CategoryName,
 
                     // 🔥 ၁။ အဝယ်စာရင်း Detail ထဲက Quantity များကို အကုန်ပေါင်းပြီး Total ဝယ်ယူမှုကို တွက်ချက်ခြင်း
                     TotalQuantityPurchased = p.TblPurchaseItems.Sum(pi => (int?)pi.Quantity) ?? 0,
